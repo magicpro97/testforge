@@ -16,7 +16,7 @@ export function registerConfigCommand(program: Command): void {
       try {
         await setConfigValue(key, value);
         const maskedValue = key.includes('apiKey')
-          ? value.slice(0, 6) + '...' + value.slice(-4)
+          ? (value.length >= 10 ? value.slice(0, 4) + '****' + value.slice(-4) : '****')
           : value;
         console.log(chalk.green(`✓ Set ${key} = ${maskedValue}`));
       } catch (err) {
@@ -44,7 +44,7 @@ export function registerConfigCommand(program: Command): void {
         for (const [name, provider] of Object.entries(config.providers)) {
           if (provider) {
             const maskedKey = provider.apiKey
-              ? provider.apiKey.slice(0, 6) + '...' + provider.apiKey.slice(-4)
+              ? (provider.apiKey.length >= 10 ? provider.apiKey.slice(0, 4) + '****' + provider.apiKey.slice(-4) : '****')
               : chalk.dim('(not set)');
             console.log(`  ${chalk.bold(name)}:`);
             console.log(`    API Key: ${maskedKey}`);

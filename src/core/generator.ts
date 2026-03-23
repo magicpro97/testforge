@@ -113,13 +113,13 @@ export async function generateE2ETests(options: E2EGenerateOptions): Promise<{ t
   const slug = options.description
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
     .slice(0, 40);
-  const testPath = options.output ?? `e2e/${slug}${extMap[framework] ?? '.spec.ts'}`;
+  const testPath = `e2e/${slug}${extMap[framework] ?? '.spec.ts'}`;
 
-  if (!options.output) {
-    await mkdir(dirname(testPath), { recursive: true });
-  }
-  await writeFile(options.output ?? testPath, testCode, 'utf-8');
+  const finalPath = options.output ?? testPath;
+  await mkdir(dirname(finalPath), { recursive: true });
+  await writeFile(finalPath, testCode, 'utf-8');
 
   return { testCode, testPath };
 }

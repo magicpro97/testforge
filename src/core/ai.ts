@@ -1,5 +1,5 @@
 import type { AIMessage, AIResponse, AIProvider } from '../types/index.js';
-import { getActiveProvider } from './config.js';
+import { getActiveProvider, loadConfig } from './config.js';
 
 async function callOpenAI(messages: AIMessage[], apiKey: string, model?: string): Promise<AIResponse> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -85,20 +85,26 @@ export async function sendAIRequest(
 ): Promise<AIResponse> {
   const active = await getActiveProvider();
 
-  if (!active && !providerOverride) {
-    throw new Error(
-      'No AI provider configured. Run:\n  testforge config set openai.apiKey <key>\n  testforge config set defaultProvider openai'
-    );
+  const provider = providerOverride ?? active?.provider;
+  if (!provider) {
+    throw new Error('No AI provider configured. Run: testforge config set openai.apiKey <key>');
   }
 
-  const provider = providerOverride ?? active!.provider;
-  const apiKey = active?.apiKey ?? '';
+  let apiKey: string | undefined;
+  let model: string | undefined;
+
+  if (active && active.provider === provider) {
+    apiKey = active.apiKey;
+    model = active.model;
+  } else {
+    const config = await loadConfig();
+    apiKey = config.providers[provider]?.apiKey;
+    model = config.providers[provider]?.model;
+  }
 
   if (!apiKey) {
     throw new Error(`No API key configured for ${provider}. Run: testforge config set ${provider}.apiKey <key>`);
   }
-
-  const model = active?.model;
 
   switch (provider) {
     case 'openai':
