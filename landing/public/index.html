@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TestForge — AI-Powered Test Generation from Your Terminal</title>
-  <meta name="description" content="Scan untested code, generate unit & E2E tests, and visualize coverage — all from the CLI with AI.">
+  <title>TestForge — AI Test Generator CLI</title>
+  <meta name="description" content="AI Test Generator CLI — scan untested code, generate unit & E2E tests, coverage analysis, all from the terminal.">
+  <meta name="keywords" content="ai, test generator, cli, unit tests, e2e tests, coverage, jest, vitest, pytest, open source">
   <meta property="og:title" content="TestForge — AI Test Generator CLI">
   <meta property="og:description" content="Scan untested code, generate unit & E2E tests, and visualize coverage from your terminal.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://testforge.linhngo.dev">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg: #0a0a0f;
       --surface: #12121a;
@@ -25,53 +25,82 @@
       --orange: #fb923c;
       --pink: #f472b6;
       --cyan: #22d3ee;
-      --red: #f87171;
-      --yellow: #facc15;
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+    /* Gradient background */
+    .bg-glow {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, #7c5cfc10 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, #22d3ee08 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
 
     /* Hero */
     .hero {
-      text-align: center;
       padding: 80px 0 60px;
+      text-align: center;
     }
-    .badge {
+
+    .hero-badge {
       display: inline-block;
+      padding: 6px 16px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 6px 16px;
+      border-radius: 100px;
       font-size: 13px;
       color: var(--text-dim);
       margin-bottom: 24px;
     }
-    .badge span { color: var(--green); }
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.2rem);
+
+    .hero-badge a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 56px);
       font-weight: 800;
-      line-height: 1.15;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
       margin-bottom: 16px;
     }
-    .hero h1 .gradient {
-      background: linear-gradient(135deg, var(--green), var(--cyan), var(--accent));
+
+    h1 .gradient {
+      background: linear-gradient(135deg, var(--accent), var(--cyan), var(--pink));
       -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
       background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .hero p {
-      font-size: 1.15rem;
+
+    .hero-sub {
+      font-size: 17px;
       color: var(--text-dim);
       max-width: 560px;
       margin: 0 auto 32px;
+      line-height: 1.7;
     }
 
     /* Install box */
@@ -83,154 +112,185 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px 20px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 15px;
-      margin-bottom: 24px;
+      margin-bottom: 12px;
       cursor: pointer;
       transition: border-color 0.2s;
     }
-    .install-box:hover { border-color: var(--accent); }
-    .install-box .prompt { color: var(--green); }
-    .install-box .cmd { color: var(--text); }
-    .install-box .copy {
-      color: var(--text-dim);
-      font-size: 18px;
-      transition: color 0.2s;
-    }
-    .install-box:hover .copy { color: var(--accent); }
 
-    /* Links */
-    .hero-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .install-box:hover {
+      border-color: var(--accent);
+    }
+
+    .install-box .dollar {
+      color: var(--text-dim);
+      user-select: none;
+    }
+
+    .install-box code {
+      color: var(--green);
+    }
+
+    .install-box .copy-hint {
+      color: var(--text-dim);
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .install-box:hover .copy-hint {
+      opacity: 1;
+    }
+
+    .install-box.copied code {
+      color: var(--cyan);
+    }
+
+    .hero-links {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
     .hero-links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
+      color: var(--text-dim);
       text-decoration: none;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
       transition: all 0.2s;
     }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 0 20px var(--accent-glow);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 30px var(--accent-glow); }
-    .btn-secondary {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover { border-color: var(--accent); }
 
-    /* Terminal */
-    .terminal-section { padding: 40px 0; }
-    .terminal {
-      background: #0d0d14;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      line-height: 1.7;
+    .hero-links a:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: var(--accent-glow);
     }
-    .terminal-bar {
+
+    /* Terminal demo */
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 40px 0;
+      overflow: hidden;
+    }
+
+    .terminal-header {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
+
     .terminal-dot {
-      width: 12px; height: 12px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
     }
+
     .terminal-dot.red { background: #ff5f57; }
     .terminal-dot.yellow { background: #febc2e; }
     .terminal-dot.green { background: #28c840; }
+
     .terminal-title {
       flex: 1;
       text-align: center;
+      font-size: 13px;
       color: var(--text-dim);
-      font-size: 12px;
     }
-    .terminal-body { padding: 20px; overflow-x: auto; }
+
+    .terminal-body {
+      padding: 20px 24px;
+      font-size: 14px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
     .terminal-body .prompt { color: var(--green); }
-    .terminal-body .cmd { color: var(--text); font-weight: 600; }
-    .terminal-body .comment { color: var(--text-dim); }
-    .terminal-body .str { color: var(--orange); }
-    .terminal-body .num { color: var(--cyan); }
+    .terminal-body .cmd { color: var(--text); }
+    .terminal-body .flag { color: var(--cyan); }
+    .terminal-body .string { color: var(--orange); }
+    .terminal-body .comment { color: var(--text-dim); font-style: italic; }
+    .terminal-body .output { color: var(--text-dim); }
     .terminal-body .success { color: var(--green); }
-    .terminal-body .error { color: var(--red); }
-    .terminal-body .warn { color: var(--yellow); }
-    .terminal-body .accent { color: var(--accent); }
-    .terminal-body .dim { color: var(--text-dim); }
+
+    /* Sections */
+    .section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .section-sub {
+      color: var(--text-dim);
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
 
     /* Features */
-    .features { padding: 60px 0; }
-    .features h2 {
-      text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 40px;
-    }
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
     }
-    .feature-card {
+
+    .feature {
+      padding: 20px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px;
-      transition: border-color 0.2s;
-    }
-    .feature-card:hover { border-color: var(--accent); }
-    .feature-icon { font-size: 28px; margin-bottom: 12px; }
-    .feature-card h3 { font-size: 1rem; margin-bottom: 8px; }
-    .feature-card p { color: var(--text-dim); font-size: 0.9rem; }
-    .feature-tag {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 3px 10px;
-      border-radius: 99px;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--accent-glow);
-      color: var(--accent);
     }
 
-    /* Quick Start */
-    .quickstart { padding: 60px 0; }
-    .quickstart h2 {
-      text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 40px;
+    .feature .icon {
+      font-size: 24px;
+      margin-bottom: 10px;
     }
-    .cmd-list {
+
+    .feature h3 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .feature p {
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    /* Commands */
+    .commands-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    .cmd-item {
+
+    .command-item {
       display: flex;
-      gap: 16px;
       align-items: baseline;
+      gap: 16px;
+      padding: 12px 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 14px 20px;
+      font-size: 14px;
     }
-    .cmd-item code {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      color: var(--cyan);
-      font-size: 13px;
+
+    .command-item code {
+      color: var(--green);
       white-space: nowrap;
+      min-width: 280px;
     }
-    .cmd-item span {
+
+    .command-item span {
       color: var(--text-dim);
       font-size: 13px;
     }
@@ -238,161 +298,200 @@
     /* Footer */
     footer {
       padding: 40px 0;
-      border-top: 1px solid var(--border);
       text-align: center;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    footer p {
       color: var(--text-dim);
       font-size: 13px;
     }
-    footer a { color: var(--blue); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 12px; }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .command-item {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .command-item code {
+        min-width: unset;
+      }
+      .hero { padding: 48px 0 32px; }
+    }
   </style>
 </head>
 <body>
+  <div class="bg-glow"></div>
 
   <div class="container">
     <!-- Hero -->
     <section class="hero">
-      <div class="badge">🧪 <span>v1.0.0</span> — AI Test Generator CLI</div>
-      <h1>
-        <span class="gradient">AI-powered test generation</span><br>
-        from your terminal
-      </h1>
-      <p>Scan untested code, generate unit & E2E tests, visualize coverage gaps — all powered by AI, all from the CLI.</p>
+      <div class="hero-badge">v1.0.0 · <a href="https://www.npmjs.com/package/testforge" target="_blank">npm</a> · <a href="https://github.com/magicpro97/testforge" target="_blank">GitHub</a></div>
+      <h1>🧪 <span class="gradient">TestForge</span></h1>
+      <p class="hero-sub">Scan untested code, generate unit &amp; E2E tests, visualize coverage gaps — all powered by AI, all from the CLI.</p>
 
-      <div class="install-box" onclick="navigator.clipboard.writeText('npm install -g testforge');this.querySelector('.copy').textContent='✓'">
-        <span class="prompt">$</span>
-        <span class="cmd">npm install -g testforge</span>
-        <span class="copy">📋</span>
+      <div class="install-box" onclick="copyInstall(this)" title="Click to copy">
+        <span class="dollar">$</span>
+        <code>npm install -g testforge</code>
+        <span class="copy-hint">click to copy</span>
       </div>
 
       <div class="hero-links">
-        <a href="https://github.com/magicpro97/testforge" class="btn-primary">⭐ GitHub</a>
-        <a href="https://www.npmjs.com/package/testforge" class="btn-secondary">📦 npm</a>
+        <a href="https://github.com/magicpro97/testforge" target="_blank">⭐ GitHub</a>
+        <a href="https://www.npmjs.com/package/testforge" target="_blank">📦 npm</a>
+        <a href="https://github.com/magicpro97/testforge#commands" target="_blank">📖 Docs</a>
       </div>
     </section>
 
     <!-- Terminal Demo -->
-    <section class="terminal-section">
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-          <div class="terminal-title">testforge — terminal</div>
-        </div>
-        <div class="terminal-body">
-<span class="comment"># Scan your project for untested code</span>
-<span class="prompt">$</span> <span class="cmd">testforge scan ./src</span>
-
-<span class="accent">🧪 TestForge — Scan Results</span>
-<span class="dim">──────────────────────────────────────────</span>
-
-  <span class="dim">Total files:</span>     <span class="num">24</span>
-  <span class="dim">Tested:</span>          <span class="success">16</span>
-  <span class="dim">Untested:</span>        <span class="error">8</span>
-  <span class="dim">Coverage:</span>        <span class="warn">67%</span>
-
-  <span class="error">✗ Untested files (8):</span>
-    <span class="error">●</span> src/core/scanner.ts <span class="dim">— 5 functions: walkDir, extractFunctions...</span>
-    <span class="error">●</span> src/core/generator.ts <span class="dim">— 3 functions: generateTests, detectFramework...</span>
-    <span class="error">●</span> src/utils/helpers.ts <span class="dim">— 4 functions: parseConfig, formatOutput...</span>
-
-<span class="comment"># Generate tests with AI</span>
-<span class="prompt">$</span> <span class="cmd">testforge gen src/core/scanner.ts</span>
-
-<span class="success">✓ Tests generated!</span>
-  <span class="dim">Framework:</span>   jest
-  <span class="dim">Tests:</span>       <span class="num">12</span> test cases
-  <span class="dim">Output:</span>      <span class="success">src/core/scanner.test.ts</span>
-        </div>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <div class="terminal-title">Terminal</div>
       </div>
-    </section>
+      <div class="terminal-body">
+        <div><span class="comment"># Scan your project for untested code</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">testforge scan ./src</span></div>
+        <div>&nbsp;</div>
+        <div><span class="output">  🧪 TestForge — Scan Results</span></div>
+        <div><span class="output">  ──────────────────────────────────────</span></div>
+        <div>&nbsp;</div>
+        <div><span class="output">  Total files:     24</span></div>
+        <div><span class="output">  Tested:          </span><span class="success">16</span></div>
+        <div><span class="output">  Untested:        8</span></div>
+        <div><span class="output">  Coverage:        67%</span></div>
+        <div>&nbsp;</div>
+        <div><span class="output">  ✗ Untested files (8):</span></div>
+        <div><span class="output">    ● src/core/scanner.ts — 5 functions</span></div>
+        <div><span class="output">    ● src/core/generator.ts — 3 functions</span></div>
+        <div>&nbsp;</div>
+        <div><span class="comment"># Generate tests with AI</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">testforge gen src/core/scanner.ts</span></div>
+        <div>&nbsp;</div>
+        <div><span class="success">  ✓ Tests generated!</span></div>
+        <div><span class="output">  Framework:   jest</span></div>
+        <div><span class="output">  Tests:       12 test cases</span></div>
+        <div><span class="output">  Output:      </span><span class="success">src/core/scanner.test.ts</span></div>
+      </div>
+    </div>
 
     <!-- Features -->
-    <section class="features">
-      <h2>Everything you need for test coverage</h2>
+    <section class="section">
+      <h2 class="section-title">Features</h2>
+      <p class="section-sub">Everything you need for test coverage, powered by AI.</p>
+
       <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🔍</div>
+        <div class="feature">
+          <div class="icon">🔍</div>
           <h3>Smart Scanning</h3>
-          <p>Detect untested files and extract function signatures across TypeScript, Python, Dart, Kotlin, and Swift.</p>
-          <span class="feature-tag">Multi-language</span>
+          <p>Detect untested files and extract function signatures across TypeScript, Python, Dart, Kotlin, Swift.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🤖</div>
+        <div class="feature">
+          <div class="icon">🤖</div>
           <h3>AI Test Generation</h3>
-          <p>Generate comprehensive unit tests with proper imports, edge cases, and error handling — powered by GPT-4o or Gemini.</p>
-          <span class="feature-tag">OpenAI + Gemini</span>
+          <p>Generate unit tests with proper imports, edge cases, error handling — powered by GPT-4o or Gemini.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎭</div>
+        <div class="feature">
+          <div class="icon">🎭</div>
           <h3>E2E Test Flows</h3>
-          <p>Describe a user flow in plain English and get Playwright, Detox, or Maestro test code.</p>
-          <span class="feature-tag">Natural Language</span>
+          <p>Describe a user flow in plain English, get Playwright/Detox/Maestro test code.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
+        <div class="feature">
+          <div class="icon">📊</div>
           <h3>Coverage Visualization</h3>
-          <p>Parse Istanbul/lcov reports and display beautiful coverage bars right in your terminal.</p>
-          <span class="feature-tag">Terminal UI</span>
+          <p>Parse Istanbul/lcov reports and display coverage bars in terminal.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">💡</div>
+        <div class="feature">
+          <div class="icon">💡</div>
           <h3>AI Suggestions</h3>
-          <p>Get prioritized recommendations on which tests to write first based on code complexity and risk.</p>
-          <span class="feature-tag">Risk Analysis</span>
+          <p>Prioritized recommendations on which tests to write first based on complexity and risk.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
+        <div class="feature">
+          <div class="icon">⚡</div>
           <h3>Framework Detection</h3>
-          <p>Auto-detects Jest, Vitest, pytest, Flutter test — generates tests in the right framework automatically.</p>
-          <span class="feature-tag">Zero Config</span>
+          <p>Auto-detects Jest, Vitest, pytest, Flutter test — generates in the right framework.</p>
         </div>
       </div>
     </section>
 
     <!-- Quick Start -->
-    <section class="quickstart">
-      <h2>Quick Start</h2>
-      <div class="cmd-list">
-        <div class="cmd-item">
+    <section class="section">
+      <h2 class="section-title">Quick Start</h2>
+      <p class="section-sub">Get started in seconds.</p>
+
+      <div class="commands-list">
+        <div class="command-item">
           <code>testforge scan ./src</code>
-          <span>Scan for untested code and show coverage gaps</span>
+          <span>Scan for untested code</span>
         </div>
-        <div class="cmd-item">
+        <div class="command-item">
           <code>testforge gen &lt;file&gt;</code>
-          <span>AI-generate unit tests for a specific file</span>
+          <span>AI-generate unit tests for a file</span>
         </div>
-        <div class="cmd-item">
-          <code>testforge gen:e2e "description"</code>
+        <div class="command-item">
+          <code>testforge gen:e2e "user flow description"</code>
           <span>Generate E2E test from natural language</span>
         </div>
-        <div class="cmd-item">
+        <div class="command-item">
           <code>testforge coverage .</code>
           <span>Show coverage summary in terminal</span>
         </div>
-        <div class="cmd-item">
+        <div class="command-item">
           <code>testforge suggest ./src</code>
           <span>AI-prioritized test recommendations</span>
         </div>
-        <div class="cmd-item">
+        <div class="command-item">
           <code>testforge config set openai.apiKey sk-...</code>
-          <span>Configure your AI provider</span>
+          <span>Configure AI provider</span>
         </div>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
-      <div class="footer-links">
-        <a href="https://github.com/magicpro97/testforge">GitHub</a>
-        <a href="https://www.npmjs.com/package/testforge">npm</a>
-        <a href="https://github.com/magicpro97">@magicpro97</a>
+    <!-- Forge Ecosystem -->
+    <section class="section" style="text-align: center;">
+      <h2 class="section-title">Part of the Forge Ecosystem</h2>
+      <p class="section-sub">A suite of CLI tools for the modern app development workflow.</p>
+      <div class="hero-links">
+        <a href="https://imgforge.linhngo.dev">🎨 ImgForge</a>
+        <a href="https://screenforge.linhngo.dev">📱 ScreenForge</a>
+        <a href="https://storeforge.linhngo.dev">🚀 StoreForge</a>
+        <a href="https://appforge.linhngo.dev">🏗️ AppForge</a>
+        <a href="https://backforge.linhngo.dev">🗄️ BackForge</a>
+        <a href="https://monforge.linhngo.dev">📊 MonForge</a>
       </div>
-      <p>MIT License © 2026 magicpro97</p>
+    </section>
+
+    <footer>
+      <p>
+        Built by <a href="https://github.com/magicpro97" target="_blank">@magicpro97</a> ·
+        <a href="https://github.com/magicpro97/testforge" target="_blank">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/testforge" target="_blank">npm</a> ·
+        MIT License
+      </p>
     </footer>
   </div>
 
+  <script>
+    function copyInstall(el) {
+      navigator.clipboard.writeText('npm install -g testforge');
+      el.classList.add('copied');
+      el.querySelector('.copy-hint').textContent = 'copied!';
+      setTimeout(() => {
+        el.classList.remove('copied');
+        el.querySelector('.copy-hint').textContent = 'click to copy';
+      }, 2000);
+    }
+  </script>
 </body>
 </html>
