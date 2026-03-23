@@ -5,8 +5,8 @@
   "targets": {
     "linh-s-blog": {
       "hosting": {
-        "testforge": [
-          "testforge"
+        "testforge-landing": [
+          "testforge-landing"
         ]
       }
     }
