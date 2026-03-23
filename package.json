@@ -1,0 +1,54 @@
+{
+  "name": "testforge",
+  "version": "1.0.0",
+  "description": "🧪 AI Test Generator CLI — scan untested code, generate unit & E2E tests, coverage analysis",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "testforge": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "testing",
+    "ai",
+    "test-generator",
+    "cli",
+    "unit-test",
+    "e2e",
+    "coverage",
+    "jest",
+    "playwright",
+    "detox"
+  ],
+  "author": "magicpro97",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magicpro97/testforge.git"
+  },
+  "homepage": "https://github.com/magicpro97/testforge#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "inquirer": "^12.6.0",
+    "ora": "^8.2.0",
+    "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0"
+  }
+}
