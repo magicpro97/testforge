@@ -17,7 +17,7 @@ Scan untested code, generate unit & E2E tests, and visualize coverage — all fr
 
 ```bash
 # Install globally
-npm install -g testforge
+npm install -g @magicpro97/testforge
 
 # Configure AI provider
 testforge config set openai.apiKey sk-your-key

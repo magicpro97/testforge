@@ -341,7 +341,7 @@
 
       <div class="install-box" onclick="copyInstall(this)" title="Click to copy">
         <span class="dollar">$</span>
-        <code>npm install -g testforge</code>
+        <code>npm install -g @magicpro97/testforge</code>
         <span class="copy-hint">click to copy</span>
       </div>
 
@@ -484,7 +484,7 @@
 
   <script>
     function copyInstall(el) {
-      navigator.clipboard.writeText('npm install -g testforge');
+      navigator.clipboard.writeText('npm install -g @magicpro97/testforge');
       el.classList.add('copied');
       el.querySelector('.copy-hint').textContent = 'copied!';
       setTimeout(() => {

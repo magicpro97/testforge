@@ -1,5 +1,5 @@
 {
-  "name": "testforge",
+  "name": "@magicpro97/testforge",
   "version": "1.0.0",
   "description": "🧪 AI Test Generator CLI — scan untested code, generate unit & E2E tests, coverage analysis",
   "main": "dist/index.js",
@@ -35,6 +35,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/magicpro97/testforge.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "homepage": "https://github.com/magicpro97/testforge#readme",
   "engines": {
