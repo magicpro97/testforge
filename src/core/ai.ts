@@ -1,83 +1,6 @@
+import { generateText, type AIProviderType } from '@magicpro97/forge-core';
 import type { AIMessage, AIResponse, AIProvider } from '../types/index.js';
 import { getActiveProvider, loadConfig } from './config.js';
-
-async function callOpenAI(messages: AIMessage[], apiKey: string, model?: string): Promise<AIResponse> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: model ?? 'gpt-4o-mini',
-      messages,
-      temperature: 0.3,
-      max_tokens: 4096,
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`OpenAI API error (${res.status}): ${errBody}`);
-  }
-
-  const data = (await res.json()) as {
-    choices: { message: { content: string } }[];
-    usage?: { total_tokens: number };
-  };
-
-  return {
-    content: data.choices[0]?.message?.content ?? '',
-    tokensUsed: data.usage?.total_tokens,
-  };
-}
-
-async function callGemini(messages: AIMessage[], apiKey: string, model?: string): Promise<AIResponse> {
-  const geminiModel = model ?? 'gemini-2.0-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
-
-  // Convert messages to Gemini format
-  const systemInstruction = messages.find((m) => m.role === 'system');
-  const contents = messages
-    .filter((m) => m.role !== 'system')
-    .map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
-
-  const body: Record<string, unknown> = {
-    contents,
-    generationConfig: {
-      temperature: 0.3,
-      maxOutputTokens: 4096,
-    },
-  };
-
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction.content }] };
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Gemini API error (${res.status}): ${errBody}`);
-  }
-
-  const data = (await res.json()) as {
-    candidates: { content: { parts: { text: string }[] } }[];
-    usageMetadata?: { totalTokenCount: number };
-  };
-
-  return {
-    content: data.candidates[0]?.content?.parts?.[0]?.text ?? '',
-    tokensUsed: data.usageMetadata?.totalTokenCount,
-  };
-}
 
 export async function sendAIRequest(
   messages: AIMessage[],
@@ -106,14 +29,7 @@ export async function sendAIRequest(
     throw new Error(`No API key configured for ${provider}. Run: testforge config set ${provider}.apiKey <key>`);
   }
 
-  switch (provider) {
-    case 'openai':
-      return callOpenAI(messages, apiKey, model);
-    case 'gemini':
-      return callGemini(messages, apiKey, model);
-    default:
-      throw new Error(`Unknown provider: ${provider}`);
-  }
+  return generateText(provider as AIProviderType, apiKey, messages, { model });
 }
 
 export function buildTestGenPrompt(sourceCode: string, filePath: string, framework: string): AIMessage[] {
