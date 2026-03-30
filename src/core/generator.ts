@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, extname, join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { GenerateOptions, GenerateResult, E2EGenerateOptions, TestFramework } from '../types/index.js';
-import { sendAIRequest, buildTestGenPrompt, buildE2EPrompt } from './ai.js';
+import { sendAIRequest, buildTestGenPrompt, buildE2EPrompt, buildFTUEPrompt, buildA11yPrompt, buildStabilityPrompt } from './ai.js';
 
 const FRAMEWORK_DETECTORS: { check: string; framework: TestFramework }[] = [
   { check: 'vitest', framework: 'vitest' },
@@ -122,4 +122,82 @@ export async function generateE2ETests(options: E2EGenerateOptions): Promise<{ t
   await writeFile(finalPath, testCode, 'utf-8');
 
   return { testCode, testPath };
+}
+
+export async function generateFTUETests(options: GenerateOptions): Promise<GenerateResult> {
+  const { file, framework: userFramework, output, dryRun } = options;
+
+  if (!existsSync(file)) {
+    throw new Error(`Source file not found: ${file}`);
+  }
+
+  const sourceCode = await readFile(file, 'utf-8');
+  const framework = userFramework ?? (await detectFramework(dirname(file)));
+  const messages = buildFTUEPrompt(sourceCode, file, framework);
+
+  const response = await sendAIRequest(messages, options.provider);
+  const testCode = stripCodeFences(response.content);
+  const testPath = output ?? getTestFilePath(file, framework);
+
+  if (!dryRun) {
+    await mkdir(dirname(testPath), { recursive: true });
+    await writeFile(testPath, testCode, 'utf-8');
+  }
+
+  const testMatches = testCode.match(/(?:it|test|def test_|testWidgets)\s*\(/g);
+  const functionsCount = testMatches?.length ?? 0;
+
+  return { testCode, testPath, framework, functionsCount };
+}
+
+export async function generateA11yTests(options: GenerateOptions): Promise<GenerateResult> {
+  const { file, framework: userFramework, output, dryRun } = options;
+
+  if (!existsSync(file)) {
+    throw new Error(`Source file not found: ${file}`);
+  }
+
+  const sourceCode = await readFile(file, 'utf-8');
+  const framework = userFramework ?? (await detectFramework(dirname(file)));
+  const messages = buildA11yPrompt(sourceCode, file, framework);
+
+  const response = await sendAIRequest(messages, options.provider);
+  const testCode = stripCodeFences(response.content);
+  const testPath = output ?? getTestFilePath(file, framework);
+
+  if (!dryRun) {
+    await mkdir(dirname(testPath), { recursive: true });
+    await writeFile(testPath, testCode, 'utf-8');
+  }
+
+  const testMatches = testCode.match(/(?:it|test|def test_|testWidgets)\s*\(/g);
+  const functionsCount = testMatches?.length ?? 0;
+
+  return { testCode, testPath, framework, functionsCount };
+}
+
+export async function generateStabilityTests(options: GenerateOptions): Promise<GenerateResult> {
+  const { file, framework: userFramework, output, dryRun } = options;
+
+  if (!existsSync(file)) {
+    throw new Error(`Source file not found: ${file}`);
+  }
+
+  const sourceCode = await readFile(file, 'utf-8');
+  const framework = userFramework ?? (await detectFramework(dirname(file)));
+  const messages = buildStabilityPrompt(sourceCode, file, framework);
+
+  const response = await sendAIRequest(messages, options.provider);
+  const testCode = stripCodeFences(response.content);
+  const testPath = output ?? getTestFilePath(file, framework);
+
+  if (!dryRun) {
+    await mkdir(dirname(testPath), { recursive: true });
+    await writeFile(testPath, testCode, 'utf-8');
+  }
+
+  const testMatches = testCode.match(/(?:it|test|def test_|testWidgets)\s*\(/g);
+  const functionsCount = testMatches?.length ?? 0;
+
+  return { testCode, testPath, framework, functionsCount };
 }

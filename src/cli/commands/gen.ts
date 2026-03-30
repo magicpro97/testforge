@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { resolve } from 'node:path';
-import { generateTests, generateE2ETests, detectFramework } from '../../core/generator.js';
+import { generateTests, generateE2ETests, generateFTUETests, generateA11yTests, generateStabilityTests, detectFramework } from '../../core/generator.js';
 import type { AIProvider, TestFramework } from '../../types/index.js';
 
 export function registerGenCommand(program: Command): void {
@@ -79,6 +79,135 @@ export function registerGenCommand(program: Command): void {
         console.log(chalk.dim('─'.repeat(50)));
       } catch (err) {
         spinner.fail('E2E generation failed');
+        console.error(chalk.red((err as Error).message));
+        process.exit(1);
+      }
+    });
+
+  // FTUE subcommand
+  program
+    .command('gen:ftue')
+    .description('Generate FTUE / onboarding flow tests (IJCSP 2024: #1 retention driver)')
+    .argument('<file>', 'Source file to generate FTUE tests for')
+    .option('-f, --framework <framework>', 'Testing framework (jest, vitest, pytest, flutter_test)')
+    .option('-p, --provider <provider>', 'AI provider (openai, gemini)')
+    .option('-o, --output <path>', 'Output test file path')
+    .option('--dry-run', 'Preview generated tests without writing')
+    .action(async (file: string, opts: { framework?: string; provider?: string; output?: string; dryRun?: boolean }) => {
+      const spinner = ora('Generating FTUE tests...').start();
+      const filePath = resolve(file);
+
+      try {
+        const result = await generateFTUETests({
+          file: filePath,
+          framework: opts.framework as TestFramework | undefined,
+          provider: opts.provider as AIProvider | undefined,
+          output: opts.output ? resolve(opts.output) : undefined,
+          dryRun: opts.dryRun,
+        });
+
+        spinner.succeed('FTUE tests generated!');
+        console.log();
+        console.log(chalk.bold('🚀 Generated FTUE Tests'));
+        console.log(chalk.dim('─'.repeat(50)));
+        console.log(`  ${chalk.bold('Framework:')}   ${result.framework}`);
+        console.log(`  ${chalk.bold('Tests:')}       ${result.functionsCount} test cases`);
+        console.log(`  ${chalk.bold('Output:')}      ${opts.dryRun ? chalk.yellow('(dry run — not written)') : chalk.green(result.testPath)}`);
+        console.log();
+
+        if (opts.dryRun) {
+          console.log(chalk.dim('─'.repeat(50)));
+          console.log(result.testCode);
+          console.log(chalk.dim('─'.repeat(50)));
+        }
+      } catch (err) {
+        spinner.fail('FTUE test generation failed');
+        console.error(chalk.red((err as Error).message));
+        process.exit(1);
+      }
+    });
+
+  // Accessibility subcommand
+  program
+    .command('gen:a11y')
+    .description('Generate accessibility tests (Fitts\' Law + WCAG compliance)')
+    .argument('<file>', 'Source file to generate accessibility tests for')
+    .option('-f, --framework <framework>', 'Testing framework (jest, vitest, pytest, flutter_test)')
+    .option('-p, --provider <provider>', 'AI provider (openai, gemini)')
+    .option('-o, --output <path>', 'Output test file path')
+    .option('--dry-run', 'Preview generated tests without writing')
+    .action(async (file: string, opts: { framework?: string; provider?: string; output?: string; dryRun?: boolean }) => {
+      const spinner = ora('Generating accessibility tests...').start();
+      const filePath = resolve(file);
+
+      try {
+        const result = await generateA11yTests({
+          file: filePath,
+          framework: opts.framework as TestFramework | undefined,
+          provider: opts.provider as AIProvider | undefined,
+          output: opts.output ? resolve(opts.output) : undefined,
+          dryRun: opts.dryRun,
+        });
+
+        spinner.succeed('Accessibility tests generated!');
+        console.log();
+        console.log(chalk.bold('♿ Generated Accessibility Tests'));
+        console.log(chalk.dim('─'.repeat(50)));
+        console.log(`  ${chalk.bold('Framework:')}   ${result.framework}`);
+        console.log(`  ${chalk.bold('Tests:')}       ${result.functionsCount} test cases`);
+        console.log(`  ${chalk.bold('Output:')}      ${opts.dryRun ? chalk.yellow('(dry run — not written)') : chalk.green(result.testPath)}`);
+        console.log();
+
+        if (opts.dryRun) {
+          console.log(chalk.dim('─'.repeat(50)));
+          console.log(result.testCode);
+          console.log(chalk.dim('─'.repeat(50)));
+        }
+      } catch (err) {
+        spinner.fail('Accessibility test generation failed');
+        console.error(chalk.red((err as Error).message));
+        process.exit(1);
+      }
+    });
+
+  // Stability subcommand
+  program
+    .command('gen:stability')
+    .description('Generate stability & crash resilience tests (>99.9% crash-free target)')
+    .argument('<file>', 'Source file to generate stability tests for')
+    .option('-f, --framework <framework>', 'Testing framework (jest, vitest, pytest, flutter_test)')
+    .option('-p, --provider <provider>', 'AI provider (openai, gemini)')
+    .option('-o, --output <path>', 'Output test file path')
+    .option('--dry-run', 'Preview generated tests without writing')
+    .action(async (file: string, opts: { framework?: string; provider?: string; output?: string; dryRun?: boolean }) => {
+      const spinner = ora('Generating stability tests...').start();
+      const filePath = resolve(file);
+
+      try {
+        const result = await generateStabilityTests({
+          file: filePath,
+          framework: opts.framework as TestFramework | undefined,
+          provider: opts.provider as AIProvider | undefined,
+          output: opts.output ? resolve(opts.output) : undefined,
+          dryRun: opts.dryRun,
+        });
+
+        spinner.succeed('Stability tests generated!');
+        console.log();
+        console.log(chalk.bold('🛡️  Generated Stability Tests'));
+        console.log(chalk.dim('─'.repeat(50)));
+        console.log(`  ${chalk.bold('Framework:')}   ${result.framework}`);
+        console.log(`  ${chalk.bold('Tests:')}       ${result.functionsCount} test cases`);
+        console.log(`  ${chalk.bold('Output:')}      ${opts.dryRun ? chalk.yellow('(dry run — not written)') : chalk.green(result.testPath)}`);
+        console.log();
+
+        if (opts.dryRun) {
+          console.log(chalk.dim('─'.repeat(50)));
+          console.log(result.testCode);
+          console.log(chalk.dim('─'.repeat(50)));
+        }
+      } catch (err) {
+        spinner.fail('Stability test generation failed');
         console.error(chalk.red((err as Error).message));
         process.exit(1);
       }
