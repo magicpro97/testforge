@@ -1,6 +1,6 @@
 {
   "name": "@magicpro97/testforge",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "🧪 AI Test Generator CLI — scan untested code, generate unit & E2E tests, coverage analysis",
   "main": "dist/index.js",
   "type": "module",
